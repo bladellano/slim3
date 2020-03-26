@@ -16,7 +16,6 @@ class LojasDAO extends Conexao
         $lojas = $this->pdo
             ->query('SELECT id,nome,telefone,endereco FROM lojas')
             ->fetchAll(\PDO::FETCH_ASSOC);
-
         return $lojas;
     }
 
