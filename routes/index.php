@@ -1,6 +1,8 @@
 <?php
 
 use function src\slimConfiguration;
+
+use App\Controllers\AuthController;
 use App\Controllers\ProdutoController;
 use App\Controllers\LojaController;
 use Slim\Middleware\HttpBasicAuthentication;
@@ -21,6 +23,9 @@ $container['view'] = function ($container) {
     return $view;
 };
 
+//=======================================================
+
+$app->post('/login',AuthController::class.':login');
 //=======================================================
 $app->get('/', function ($req, $res, $args) {
     return $this->view->render($res, 'index.html');

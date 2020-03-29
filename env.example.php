@@ -7,3 +7,5 @@ putenv('CODEEASY_DBNAME=');
 putenv('CODEEASY_USER=');
 putenv('CODEEASY_PASSWORD=');
 putenv('CODEEASY_PORT=');
+
+putenv('JWT_SECRET_KEY=');
