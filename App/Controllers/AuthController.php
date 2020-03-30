@@ -2,7 +2,9 @@
 
 namespace App\Controllers;
 
+use App\DAO\TokensDAO;
 use App\DAO\UsuariosDAO;
+use App\Models\TokenModel;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Firebase\JWT\JWT;
@@ -16,6 +18,7 @@ final class AuthController
 
         $email = $data['email'];
         $senha = $data['senha'];
+        $expireDate = $data['expire_date'];
 
         $usuarioDAO = new UsuariosDAO();
         $usuario = $usuarioDAO->getUserByEmail($email);
@@ -27,15 +30,34 @@ final class AuthController
             return $response->withStatus(401);
 
         $tokenPayload = [
-            'sub'=>$usuario->getId(),
-            'name'=>$usuario->getNome(),
-            'email'=>$usuario->getEmail(),
-            'expired_at'=>(new \DateTime())->modify('+2 days')
-            ->format('Y-m-d H:i:s')
+            'sub' => $usuario->getId(),
+            'name' => $usuario->getNome(),
+            'email' => $usuario->getEmail(),
+            'expired_at' => $expireDate
         ];
 
-        var_dump($tokenPayload);
-        // var_dump($usuario);
+        $token = JWT::encode($tokenPayload, getenv('JWT_SECRET_KEY'));
+        $refreshTokenPayload = [
+            'email' => $usuario->getEmail()
+        ];
+
+        $refreshToken = JWT::encode($refreshTokenPayload, getenv('JWT_SECRET_KEY'));
+
+        $tokenModel = new TokenModel();
+
+        $tokenModel
+        ->setExpired_at($expireDate)
+        ->setRefresh_token($refreshToken)
+        ->setToken($token)
+        ->setUsuario_id($usuario->getId());
+
+        $tokenDAO = new TokensDAO();
+        $tokenDAO->createToken($tokenModel);
+
+        $response = $response->withJson([
+            'token'=>$token,
+            'refresh_token'=>$refreshToken
+        ]);
 
         return $response;
     }

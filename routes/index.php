@@ -10,6 +10,7 @@ use Slim\Middleware\HttpBasicAuthentication;
 $app = new \Slim\App(slimConfiguration());
 
 $container = $app->getContainer();
+
 $container['view'] = function ($container) {
     $view = new \Slim\Views\Twig('App/Views', [
         'cache' => false
