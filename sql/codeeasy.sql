@@ -34,6 +34,7 @@ CREATE TABLE tokes(
   token VARCHAR(1000) NOT NULL,
   refresh_token VARCHAR (1000) NOT NULL,
   expired_at DATETIME NOT NULL,
+  active TINYINT UNSIGNED NOT NULL DEFAULT 1,
   CONSTRAINT fk_tokens_usuarios_id_usuarios_id
   FOREIGN KEY (usuarios_id) REFERENCES usuarios(id)
   );
