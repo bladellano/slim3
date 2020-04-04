@@ -29,39 +29,24 @@ final class AuthController
         if (!password_verify($senha, $usuario->getSenha()))
             return $response->withStatus(401);
 
-        $tokenPayload = [
-            'sub' => $usuario->getId(),
-            'name' => $usuario->getNome(),
-            'email' => $usuario->getEmail(),
-            'expired_at' => $expireDate
-        ];
+        $tokenPayload = $this->setTokenPayload($usuario, $expireDate);
 
         $token = JWT::encode($tokenPayload, getenv('JWT_SECRET_KEY'));
-        $refreshTokenPayload = [
-            'email' => $usuario->getEmail(),
-            'random' => uniqid()
-        ];
 
-        $refreshToken = JWT::encode($refreshTokenPayload, getenv('JWT_SECRET_KEY'));
+        $refreshToken = $this->setRefreshTokenPayload($usuario->getEmail());
 
-        $tokenModel = new TokenModel();
-
-        $tokenModel
-            ->setExpired_at($expireDate)
-            ->setRefresh_token($refreshToken)
-            ->setToken($token)
-            ->setUsuario_id($usuario->getId());
-
-        $tokenDAO = new TokensDAO();
-        $tokenDAO->createToken($tokenModel);
-
-        $response = $response->withJson([
-            'token' => $token,
-            'refresh_token' => $refreshToken
-        ]);
+        $response = $response->withJson(
+            $this->saveTokenRefreshToken(
+                $expireDate,
+                $refreshToken,
+                $token,
+                $usuario->getId()
+            )
+        );
 
         return $response;
     }
+
 
     public function refreshToken(Request $request, Response $response, array $args): Response
     {
@@ -77,6 +62,7 @@ final class AuthController
         );
 
         $tokensDAO = new TokensDAO();
+        
         $refresTokenExist = $tokensDAO->verifyRefreshToken($refreshToken);
 
         if (!$refresTokenExist)
@@ -85,40 +71,66 @@ final class AuthController
         $usuario = $usuariosDAO->getUserByEmail($refreshTokenDecoded->email);
         if (is_null($usuario))
             return $response->withStatus(401);
+            
+        $tokensDAO->changeStatusToken($refreshToken);
 
-        //---------------------//            
+        $tokenPayload = $this->setTokenPayload($usuario, $expireDate);
+
+        $token = JWT::encode($tokenPayload, getenv('JWT_SECRET_KEY'));
+
+        $refreshToken = $this->setRefreshTokenPayload($usuario->getEmail());
+
+        $response = $response->withJson(
+            $this->saveTokenRefreshToken(
+                $expireDate,
+                $refreshToken,
+                $token,
+                $usuario->getId()
+            )
+        );
+
+        return $response;
+    }
+
+
+    //Funções auxiliares
+
+    public function setTokenPayload(Object $usuario, String $expireDate)
+    {
         $tokenPayload = [
             'sub' => $usuario->getId(),
             'name' => $usuario->getNome(),
             'email' => $usuario->getEmail(),
             'expired_at' => $expireDate
         ];
+        return $tokenPayload;
+    }
 
-        $token = JWT::encode($tokenPayload, getenv('JWT_SECRET_KEY'));
+    public function setRefreshTokenPayload(String $usuarios_email)
+    {
         $refreshTokenPayload = [
-            'email' => $usuario->getEmail(),
+            'email' => $usuarios_email,
             'random' => uniqid()
         ];
 
-        $refreshToken = JWT::encode($refreshTokenPayload, getenv('JWT_SECRET_KEY'));
+        return JWT::encode($refreshTokenPayload, getenv('JWT_SECRET_KEY'));
+    }
 
+    public function saveTokenRefreshToken($expireDate, $refreshToken, $token, $usuarios_id)
+    {
         $tokenModel = new TokenModel();
-
         $tokenModel
             ->setExpired_at($expireDate)
             ->setRefresh_token($refreshToken)
             ->setToken($token)
-            ->setUsuario_id($usuario->getId());
+            ->setUsuario_id($usuarios_id);
 
         $tokenDAO = new TokensDAO();
         $tokenDAO->createToken($tokenModel);
 
-        $response = $response->withJson([
+        return [
             'token' => $token,
             'refresh_token' => $refreshToken
-        ]);
-
-        //---------------------//
-        return $response;
+        ];
     }
 }

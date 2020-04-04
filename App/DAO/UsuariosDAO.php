@@ -11,8 +11,7 @@ class UsuariosDAO extends Conexao
         parent::__construct();
     }
 
-    // public function getUserByEmail(string $email): ?UsuarioModel
-    public function getUserByEmail(string $email)
+    public function getUserByEmail(string $email):?UsuarioModel
     {
         $stmt = $this->pdo
             ->prepare('SELECT 

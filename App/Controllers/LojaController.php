@@ -40,8 +40,20 @@ final class LojaController
 
 	public function updateLoja(Request $request, Response $response, array $args)
 	{
+		$data = $request->getParsedBody();
+
+		$lojaDAO = new LojasDAO();
+		$loja = new LojaModel();
+		
+		$loja->setId($data['id']);
+		$loja->setNome($data['nome']);
+		$loja->setEndereco($data['endereco']);
+		$loja->setTelefone($data['telefone']);
+ 
+		$lojaDAO->updateLoja($loja);
+
 		$response = $response->withJson([
-			'message' => 'Hello World!'
+			'message' => 'Loja atualizada com sucesso!'
 		]);
 
 		return $response;

@@ -19,7 +19,7 @@ class LojasDAO extends Conexao
         return $lojas;
     }
 
-    public function insertLoja(LojaModel $loja)
+    public function insertLoja(LojaModel $loja): ?String
     {
 
         try {
@@ -40,10 +40,29 @@ class LojasDAO extends Conexao
     }
 
     public function deleteLoja(int $id)
-    {        
+    {
         $stmt = $this->pdo
             ->prepare('DELETE FROM lojas WHERE id = :id');
         $data = ['id' => $id];
+        $stmt->execute($data);
+    }
+
+    public function updateLoja(LojaModel $loja): void
+    {
+        $stmt = $this->pdo
+            ->prepare('UPDATE lojas SET 
+            nome = :nome, 
+            telefone = :telefone, 
+            endereco = :endereco  
+            WHERE id = :id');
+
+        $data = array(
+            "nome" => $loja->getNome(),
+            "telefone" => $loja->getTelefone(),
+            "endereco" => $loja->getEndereco(),
+            "id" => $loja->getId()
+        );
+
         $stmt->execute($data);
     }
 }
